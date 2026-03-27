@@ -161,7 +161,71 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
+**4. Verification requirement scan:** Re-read the original prompt/spec. Did it request user verification, user feedback, user approval, or any form of human-in-the-loop confirmation? If yes: verify that at least one task has `requiresUserVerification: true` in its metadata and includes the standard verification block. If no such task exists, add one.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
+
+## User Verification Detection
+
+After writing the plan tasks but BEFORE creating native tasks, scan the original prompt/spec for user verification requirements.
+
+**Detection keywords** (match any of these in the prompt, spec, or task descriptions):
+- "user verification", "user approval", "user confirmation", "user feedback"
+- "ask the user", "confirm with user", "check with user", "verify with user"
+- "human review", "human approval", "manual verification"
+- "requires approval", "needs confirmation", "must confirm"
+- "feedback from users", "user reports", "user observes"
+
+**When verification keywords are detected:**
+
+1. Create dedicated verification task(s) — or add verification to existing tasks if the verification is part of that task's scope
+2. Set `"requiresUserVerification": true` in the task's `json:metadata`
+3. Set `"userVerificationPrompt"` to the specific question for the user
+4. Include the **standard verification block** in the task description (copy verbatim):
+
+**Standard verification block format:**
+
+~~~markdown
+**User Verification Required:**
+Before marking this task complete, you MUST call AskUserQuestion:
+```yaml
+AskUserQuestion:
+  question: "[specific question derived from the prompt's verification requirement]"
+  header: "Verification"
+  options:
+    - label: "[positive outcome]"
+      description: "[what this means]"
+    - label: "[negative outcome / needs rework]"
+      description: "[what happens next]"
+```
+~~~
+
+**If the user selects the negative option:** The task is NOT complete. Rework, then re-verify with AskUserQuestion again.
+
+**Example — prompt says "plan must include user feedback on error count":**
+
+The plan should include a task like:
+
+> **Task N: Verify error reduction with user**
+>
+> **Goal:** Get user confirmation that hook errors have decreased from baseline.
+>
+> **User Verification Required:**
+> Before marking this task complete, you MUST call AskUserQuestion:
+> ```yaml
+> AskUserQuestion:
+>   question: "How many hook errors do you see per Bash command? (baseline: 38)"
+>   header: "Verification"
+>   options:
+>     - label: "Reduced"
+>       description: "Fewer than 38 errors — improvement confirmed"
+>     - label: "Same or worse"
+>       description: "No improvement — needs rework"
+> ```
+>
+> ```json:metadata
+> {"files": [], "verifyCommand": "", "acceptanceCriteria": ["user confirms error reduction"], "requiresUserVerification": true, "userVerificationPrompt": "How many hook errors do you see per Bash command? (baseline: 38)"}
+> ```
 
 ## Execution Handoff
 
