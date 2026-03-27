@@ -79,8 +79,17 @@ Key principle: TDD cycles happen WITHIN tasks, not as separate tasks. A task is 
 
 **Tech Stack:** [Key technologies/libraries]
 
+**User Verification:** [YES — what the user wants verified, by whom, and when] or [NO — no user verification required]
+
 ---
 ```
+
+**The User Verification field is mandatory.** Re-read the original prompt/spec and answer: does it require any form of user feedback, user confirmation, human sign-off, or human-in-the-loop validation? This is about intent, not exact keywords. Examples:
+- "verify with the user after each module" → YES — user confirms each module's output before proceeding
+- "terugkoppeling van users hoeveel foutmeldingen die ziet" → YES — user reports observed error count
+- "add a caching layer" → NO
+
+If YES: every task that requires user verification MUST include the standard verification block (see User Verification Enforcement section below). If you write YES here but create no verification tasks, the HARD-GATE before Execution Handoff will catch the gap.
 
 ## Task Structure
 
@@ -311,10 +320,12 @@ TaskCreate:
     [Key actions from task's Steps — abbreviated]
 
     ```json:metadata
-    {"files": ["path/to/file1.py"], "verifyCommand": "pytest tests/path/ -v", "acceptanceCriteria": ["criterion 1", "criterion 2"]}
+    {"files": ["path/to/file1.py"], "verifyCommand": "pytest tests/path/ -v", "acceptanceCriteria": ["criterion 1", "criterion 2"], "requiresUserVerification": false}
     ```
   activeForm: "Implementing [Component Name]"
 ```
+
+**`requiresUserVerification` is a required field in every task's metadata** — always present, explicitly `true` or `false`. When `true`, also include `userVerificationPrompt` and the standard verification block in the description (see User Verification Enforcement section). This forces an active decision per task rather than allowing verification to be silently omitted.
 
 ### Why Embedded Metadata
 

@@ -37,8 +37,8 @@ Embed metadata as a `json:metadata` code fence at the end of the TaskCreate desc
 | `verifyCommand` | string | yes | Command to verify task completion |
 | `acceptanceCriteria` | string[] | yes | List of testable criteria |
 | `estimatedScope` | "small" \| "medium" \| "large" | no | Relative effort indicator |
-| `requiresUserVerification` | boolean | no | Task completion requires explicit user approval via AskUserQuestion. Set by writing-plans when prompt contains verification keywords. |
-| `userVerificationPrompt` | string | no | The specific question to ask the user for verification. Used by execution skills to construct the AskUserQuestion call. |
+| `requiresUserVerification` | boolean | **yes** | Whether task completion requires explicit user approval via AskUserQuestion. Always present — explicitly `true` or `false`. Forces active decision per task. |
+| `userVerificationPrompt` | string | conditional | The specific question to ask the user. **Required when `requiresUserVerification` is `true`.** Used by execution skills to construct the AskUserQuestion call. |
 
 ### Example
 
