@@ -161,29 +161,31 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
-**4. Verification requirement scan:** Re-read the original prompt/spec. Did it request user verification, user feedback, user approval, or any form of human-in-the-loop confirmation? If yes: verify that at least one task has `requiresUserVerification: true` in its metadata and includes the standard verification block. If no such task exists, add one.
+**4. Verification requirement scan:** Answer this question with YES or NO:
+
+> Does the original prompt/spec require **any form of** user verification, user feedback, user confirmation, user approval, human sign-off, or human-in-the-loop validation of the work's outcome?
+
+This is about **intent**, not exact keywords. All of these qualify:
+- "plan must include user feedback on error count" → YES
+- "terugkoppeling van users hoeveel foutmeldingen die ziet" → YES
+- "verify with the user that latency improved" → YES
+- "add a caching layer" → NO (no human verification requested)
+
+**If YES:** Call `TaskList`. At least one task MUST have `requiresUserVerification: true` in its `json:metadata`. If no such task exists → you have a gap. **Do not proceed.** Create a dedicated verification task now using the standard format below.
 
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
-## User Verification Detection
+## User Verification Enforcement
 
-After writing the plan tasks but BEFORE creating native tasks, scan the original prompt/spec for user verification requirements.
+When the original prompt/spec requires any form of user verification (detected in Self-Review step 4 above), the plan MUST include dedicated verification task(s). This is not optional — it is the mechanism that ensures user feedback requirements survive from prompt through to execution.
 
-**Detection keywords** (match any of these in the prompt, spec, or task descriptions):
-- "user verification", "user approval", "user confirmation", "user feedback"
-- "ask the user", "confirm with user", "check with user", "verify with user"
-- "human review", "human approval", "manual verification"
-- "requires approval", "needs confirmation", "must confirm"
-- "feedback from users", "user reports", "user observes"
+### What makes a verification task
 
-**When verification keywords are detected:**
+A verification task has three mandatory elements:
 
-1. Create dedicated verification task(s) — or add verification to existing tasks if the verification is part of that task's scope
-2. Set `"requiresUserVerification": true` in the task's `json:metadata`
-3. Set `"userVerificationPrompt"` to the specific question for the user
-4. Include the **standard verification block** in the task description (copy verbatim):
-
-**Standard verification block format:**
+1. `"requiresUserVerification": true` in the task's `json:metadata`
+2. `"userVerificationPrompt"` set to the specific question for the user
+3. The **standard verification block** in the task description (copy verbatim):
 
 ~~~markdown
 **User Verification Required:**
@@ -202,9 +204,18 @@ AskUserQuestion:
 
 **If the user selects the negative option:** The task is NOT complete. Rework, then re-verify with AskUserQuestion again.
 
-**Example — prompt says "plan must include user feedback on error count":**
+### Where verification tasks go
 
-The plan should include a task like:
+- **Dedicated task** when the verification is a standalone checkpoint (e.g., "ask the user how many errors they see")
+- **Added to an existing task** when the verification is part of that task's scope (e.g., "implement fix AND verify with user that it works")
+
+Either way, the three mandatory elements above must be present.
+
+### Example
+
+Prompt: "Fix hook errors. Plan must include user feedback on error count."
+
+The plan must include a task like:
 
 > **Task N: Verify error reduction with user**
 >
@@ -226,6 +237,17 @@ The plan should include a task like:
 > ```json:metadata
 > {"files": [], "verifyCommand": "", "acceptanceCriteria": ["user confirms error reduction"], "requiresUserVerification": true, "userVerificationPrompt": "How many hook errors do you see per Bash command? (baseline: 38)"}
 > ```
+
+<HARD-GATE>
+STOP. Before proceeding to Execution Handoff, you MUST confirm:
+
+1. Did you complete Self-Review step 4 (verification requirement scan)?
+2. If the answer was YES (prompt requires user verification): does `TaskList` show at least one task with `requiresUserVerification: true` in its description?
+
+If the prompt requires user verification and NO verification task exists: **GO BACK.** Create the verification task now. You CANNOT proceed to Execution Handoff without it.
+
+This gate exists because user verification requirements routinely get lost between plan writing and execution. The only way to guarantee they survive is to encode them as native tasks with enforceable metadata.
+</HARD-GATE>
 
 ## Execution Handoff
 
