@@ -61,6 +61,29 @@ If TaskList returned no tasks or tasks don't match plan:
 4. Call `TaskList` and verify blockedBy relationships show correctly (e.g., "blocked by #1, #2")
 
 
+### Step 1c: Gemini Consultation
+
+**After loading the plan and bootstrapping tasks, but BEFORE executing any tasks:**
+
+1. Send the plan to Gemini for review:
+
+```bash
+cat <plan-path> | gemini -m gemini-3.1-pro-preview "You are reviewing an implementation plan that I (Claude) wrote and am about to execute. Review it critically:
+- Architectural concerns or blind spots
+- Missing edge cases or error handling
+- Task ordering issues or missing dependencies
+- Suggestions for improvement
+Be specific and actionable. Reference task numbers."
+```
+
+2. Present Gemini's full feedback to the user
+3. Ask: "How would you like to proceed? I can incorporate any of these suggestions, or move straight to implementation."
+4. Wait for user input before proceeding. Do NOT silently filter, discard, or act on feedback without approval.
+
+**This phase is lightweight — don't let it block progress.** If Gemini times out or errors, note it and proceed.
+
+**IMPORTANT:** Always use `gemini -m gemini-3.1-pro-preview`. NEVER fall back to Gemini Flash. If only Flash is available or the pro model errors, skip the consultation entirely rather than using an inferior model.
+
 ### Step 2: Execute Tasks
 
 For each task:

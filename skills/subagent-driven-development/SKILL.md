@@ -65,7 +65,11 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers-extended-cc:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract tasks, TaskCreate for each with full text" -> "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)";
+    "Read plan, extract tasks, TaskCreate for each with full text" -> "Gemini Consultation";
+    "Gemini Consultation" [shape=box style=filled fillcolor=lightyellow];
+    "Review Gemini feedback with user" [shape=box];
+    "Gemini Consultation" -> "Review Gemini feedback with user";
+    "Review Gemini feedback with user" -> "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)";
     "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (skills/subagent-driven-development/implementer-prompt.md)";
@@ -89,6 +93,29 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers-extended-cc:finishing-a-development-branch";
 }
 ```
+
+## Gemini Consultation Phase
+
+**After reading the plan and creating tasks, but BEFORE dispatching the first implementer:**
+
+1. Send the plan to Gemini for review:
+
+```bash
+cat <plan-path> | gemini -m gemini-3.1-pro-preview "You are reviewing an implementation plan that I (Claude) wrote and am about to execute. Review it critically:
+- Architectural concerns or blind spots
+- Missing edge cases or error handling
+- Task ordering issues or missing dependencies
+- Suggestions for improvement
+Be specific and actionable. Reference task numbers."
+```
+
+2. Present Gemini's full feedback to the user
+3. Ask: "How would you like to proceed? I can incorporate any of these suggestions, or move straight to implementation."
+4. Wait for user input before proceeding. Do NOT silently filter, discard, or act on feedback without approval.
+
+**This phase is lightweight — don't let it block progress.** If Gemini times out or errors, note it and proceed.
+
+**IMPORTANT:** Always use `gemini -m gemini-3.1-pro-preview`. NEVER fall back to Gemini Flash. If only Flash is available or the pro model errors, skip the consultation entirely rather than using an inferior model.
 
 ## Dispatching with Metadata
 

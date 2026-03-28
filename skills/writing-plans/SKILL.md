@@ -271,6 +271,8 @@ AskUserQuestion:
   question: "Plan complete and saved to docs/superpowers/plans/<filename>.md. How would you like to execute it?"
   header: "Execution"
   options:
+    - label: "Subagent Swarm"
+      description: "I dispatch fresh subagent per task, running tasks in parallel wherever possible. I work through all tasks until completion unless I require your intervention or input."
     - label: "Subagent-Driven (this session)"
       description: "I dispatch fresh subagent per task, review between tasks, fast iteration"
     - label: "Parallel Session (separate)"
@@ -282,11 +284,19 @@ AskUserQuestion:
 <HARD-GATE>
 STOP. The user has chosen an execution method. You MUST invoke the corresponding skill using the Skill tool NOW. Do NOT implement tasks yourself — do NOT read files, make edits, or update task statuses. Your ONLY permitted action is invoking the skill below.
 
+**If Subagent Swarm chosen:**
+Invoke the Skill tool: `superpowers-extended-cc:subagent-driven-development`
+- The skill handles everything: subagent dispatch, review, task tracking
+- Dispatch fresh subagent per task, running independent tasks in parallel wherever possible
+- Work through ALL tasks until completion without stopping for review between tasks
+- Only stop to ask the user if blocked, need input, or hit an ambiguity
+- After all tasks complete, present a summary of what was done
+
 **If Subagent-Driven chosen:**
 Invoke the Skill tool: `superpowers-extended-cc:subagent-driven-development`
 - The skill handles everything: subagent dispatch, review, task tracking
 - You stay in this session as the coordinator
-- Do NOT start working on tasks directly
+- Fresh subagent per task + code review between tasks
 
 **If Parallel Session chosen:**
 Guide the user to open a new session in the worktree, then invoke: `superpowers-extended-cc:executing-plans`
